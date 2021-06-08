@@ -29,7 +29,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 
 def run_scenarios(kwargs):
-    subcontr0 = Controller(cf.SUBCONT0, cf.SUB_CON0_POS_X, cf.SUB_CON0_POS_Y) 
+    subcontr0 = Controller(cf.SUBCONT0, cf.SUB_CON0_POS_X, cf.SUB_CON0_POS_Y)
     subcontr1 = Controller(cf.SUBCONT1, cf.SUB_CON1_POS_X, cf.SUB_CON1_POS_Y)
     
 
@@ -44,6 +44,7 @@ def run_scenarios(kwargs):
     scenarios = cf.scenarios if not kwargs.get("dry_run") else cf.dry_run_scenarios
 
     cf.HETEROGEANOUS = kwargs.get("heterogeanous")
+
     cf.RESULTS_PATH = os.path.join(cf.RESULTS_PATH, time.strftime("%Y-%m-%d"), time.strftime("%H-%M"))
 
     # If node initial energy is specified, network is homogeanous
@@ -53,9 +54,14 @@ def run_scenarios(kwargs):
     list_packet_losses = []
     nicknames_list = []
     total_death=[]
+
+    # nicknames_list = []
     for scenario in scenarios:
         if type(scenario) is str:
             exec(scenario)
+
+
+            
             continue
         network.set_scenario(scenario[0])
         nicknames_list.append(scenario[0])
@@ -90,9 +96,11 @@ def run_scenarios(kwargs):
         network.set_aggregation_function(eval(aggregation_function))
 
         logging.info(scenario_name + ': running scenario...')
-        traces[scenario_name], timer_logs[scenario_name] = network.simulate()
+        traces[scenario_name], timer_logs[scenario_name] = network.simulate(scenario[0])
 
         remaining_energies.append(600.0 - network.get_remaining_energy())
+
+
         average_energies.append(network.get_average_energy())
         list_packet_losses.append(network.packetloss)
         total_death.append(network.death_list)
@@ -151,10 +159,10 @@ def run_scenarios(kwargs):
     
     X_labels = [str((i + 1) * 100) for i in X_axis]
     x = matplotlib.pyplot
-    legend = ['leach', 'fcm', 'mlc']
+    # legend = ['leach', 'fcm', 'mlc']
     for i in range(0, len(averages_list)):
 
-        x.bar(X_axis + (i-1) * 0.2, averages_list[i], 0.2, label = legend[i])
+        x.bar(X_axis + (i-1) * 0.2, averages_list[i], 0.2, label = nicknames_list[i])
 
     x.xticks(X_axis, X_labels)
     x.xlabel("per 100 rounds")
@@ -204,10 +212,10 @@ def run_scenarios(kwargs):
     
     X_labels = [str((i + 1) * 100) for i in X_axis]
     x = matplotlib.pyplot
-    legend = ['leach', 'fcm', 'mlc']
+    # legend = ['leach', 'fcm', 'mlc']
     for i in range(0, len(averages_list)):
 
-        x.bar(X_axis + (i-1) * 0.2, averages_list[i], 0.2, label = legend[i])
+        x.bar(X_axis + (i-1) * 0.2, averages_list[i], 0.2, label = nicknames_list[i])
 
     x.xticks(X_axis, X_labels)
     x.xlabel("per 100 rounds")
@@ -215,6 +223,8 @@ def run_scenarios(kwargs):
     # x.title("Number of Students in each group")/
     x.legend()
     x.show()
+
+    
 
 
 

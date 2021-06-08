@@ -101,7 +101,7 @@ def print_coverage_info(traces):
     for scenario_name, tracer in traces.items():
         args = (scenario_name, tracer['first_depletion'][2][0])
         print("%s: first depletion at %d" % args)
-        args = (scenario_name, tracer['30per_depletion'][2][0])
+        args = (scenario_name, tracer['50per_depletion'][2][0])
         print("%s: 30 percent depletion at %d" % args)
         for trace_name, trace in tracer.items():
             if not trace[4]:
@@ -118,7 +118,7 @@ def save2csv(traces):
     for scenario_name, tracer in traces.items():
         tmp = {'scenario_name': scenario_name,
                'first_depletion': tracer['first_depletion'][2][0],
-               '0per_depletion': tracer['50per_depletion'][2][0],
+               '50per_depletion': tracer['50per_depletion'][2][0],
                'last_depletion': tracer['last_depletion'][2][0]}
         for trace_name, trace in tracer.items():
             if not trace[4]:

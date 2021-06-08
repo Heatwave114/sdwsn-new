@@ -93,7 +93,7 @@ scenarios = [
     "cf.FITNESS_ALPHA=0.7",
     "cf.FITNESS_BETA=0.3",
       #            scenario0,
-                 #scenario1,
+                 scenario1,
     #              scenario2,
                  scenario3,
     #              scenario4,
@@ -155,7 +155,7 @@ TRACE_COVERAGE = 1
 TRACE_LEARNING_CURVE = 1
 TRANS_RATE = 4150       # IN bps
 # Runtime configuration
-MAX_ROUNDS = 200
+MAX_ROUNDS = 100
 # number of transmissions of sensed information to cluster heads or to
 # base station (per round)
 MAX_TX_PER_ROUND = 1

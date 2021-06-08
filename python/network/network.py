@@ -1,19 +1,22 @@
+import os
 import time
+import csv
 from numpy.core.fromnumeric import trace
 from python.network.node import Node
 from python.network.node import Controller
 import uuid
 import logging
 from multiprocessing.dummy import Pool as ThreadPool
-
 import matplotlib.pyplot as plt
 import config as cf
 #from python.sleep_scheduling.sleep_scheduler import *
 from python.utils.grid import *
 from python.utils.tracer import *
-from python.utils.utils import calculate_distance 
+from python.utils.utils import calculate_distance, get_result_path
 
 from python.network.sleepscheduler import SleepScheduler
+from datetime import datetime
+
 class Network(list):
     """This class stores a list with all network nodes plus the base sta-
     tion. Its methods ensure the network behavior.
@@ -84,7 +87,45 @@ class Network(list):
         self.perform_two_level_comm = 1
         # self.deaths_this_round = 0
 
-    def simulate(self):
+
+    @classmethod
+    def make_round_energies_result_dir(cls):
+        """Mkdir results dir if it doesn't exist"""
+        Network.this_remaining_energies_result_dir = os.path.join(get_result_path(), 'remaining_energies')
+        dir_path = Network.this_remaining_energies_result_dir
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        # return dir_path
+
+    @classmethod
+    def open_round_energies_result_csv(cls, scenario):
+        """Write only open the remaining_energies.csv"""
+        Network.this_remaining_energies_result_path = os.path.join(Network.this_remaining_energies_result_dir, f'{scenario}_' + datetime.today().strftime('%H-%M-%S') + '_remaining_energies.csv')
+        Network.round_energies_result_csv =  open(Network.this_remaining_energies_result_path, mode='w')
+        Network.round_energies_result_csv_writer = csv.writer(Network.round_energies_result_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+    @classmethod
+    def close_round_energies_result_csv(cls):
+        """close remaining_energies.csv"""
+        Network.round_energies_result_csv.close()
+
+
+    @classmethod
+    def write_round_energies_header_csv(cls):
+        """Writes the headings of the remaining_energies.csv"""
+        header = [f'node_{i}' for i in range(0, cf.MAX_ROUNDS)]
+        Network.round_energies_result_csv_writer.writerow(header)
+        # pass
+
+    @classmethod
+    def write_round_energies_csv(cls, round_energies):
+        """Append the round energies record(single line) to the csv"""
+        if not round_energies or not isinstance(round_energies, list) or not isinstance(round_energies[0], str):
+            raise Exception('round_energies is a list of strings (all node energies for that round)')
+        Network.round_energies_result_csv_writer.writerow(round_energies)
+
+
+    def simulate(self, scenario):
         tracer = Tracer()
 
         self.routing_protocol.pre_communication(self)
@@ -97,7 +138,17 @@ class Network(list):
         #    self._sleep_scheduler = SleepScheduler(
          #       self, self.sleep_scheduler_class)
 
+
+        # write_energies_headings_csv()
+
         for round_nb in range(0, cf.MAX_ROUNDS):
+            if round_nb == 0:
+                Network.make_round_energies_result_dir()
+                Network.open_round_energies_result_csv(scenario)
+                Network.write_round_energies_header_csv()
+            elif round_nb >= cf.MAX_ROUNDS:
+                Network.close_round_energies_result_csv()
+
             if self.someone_alive():
                 self.round = round_nb
                 print_args = (
@@ -185,13 +236,8 @@ class Network(list):
         """
         before_energy = self.get_remaining_energy()
         self.current_time = time.time()
-        
+ 
 
-
-
-
-
-    
         #while time.time()-self.current_time <= 50*cf.TIME_SLOT:
         for i in range(0, cf.MAX_TX_PER_ROUND):
             
@@ -256,14 +302,31 @@ class Network(list):
         #     packet_loss_total = 0
 
         # if self.cnt == 0:
-        try:
-            with open('packetloss.txt', 'a') as f:
-                    f.write('average packet loss for round '+str(round)+' '+ ' packet_loss_total '+str(self.packet_loss_total)+'pack '+ str(self.pack)+' packet loss'+str((self.packet_loss_total-self.pack)/self.number_of_CH)+'\n')
 
-                    if self.number_of_CH != 0:
-                        self.packetloss.append((self.packet_loss_total-self.pack)/self.number_of_CH)
-        except:
-            pass
+
+        # write record (single line) into remaining_energies.csv
+        round_energies = [str(node.energy_source.energy) for node in self.get_ordinary_nodes()]
+        Network.write_round_energies_csv(round_energies)
+
+        # try:
+        #     with open('packetloss.txt', 'a') as f:
+        #         f.write('average packet loss for round '+str(round)+' '+ ' packet_loss_total '+str(self.packet_loss_total)+'pack '+ str(self.pack)+' packet loss'+str((self.packet_loss_total-self.pack)/self.number_of_CH)+'\n')
+
+        #         if self.number_of_CH != 0:
+        #             self.packetloss.append((self.packet_loss_total-self.pack)/self.number_of_CH)
+
+        #     # with open('remaining_energies.txt', 'a') as f:
+        #     #     for node in self.get_ordinary_nodes():
+        #     #         f.write(f'node_id: {node.id} \t remaining_energy: {node.energy_source.energy}' + '\n')
+
+
+        #     # with open('remaining_energies.csv', mode='w') as f:
+        #     #     writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        #     #     writer.writerow([])
+
+
+        # except:
+        #     pass
 
 
                 

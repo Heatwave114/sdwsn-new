@@ -159,7 +159,7 @@ class MLC(RoutingProtocol):
             # print(len(cluster))
             # print(self.clusters[cluster_id])
 
-            if len(cluster) < self.clusters[cluster_id]*0.5:
+            if len(cluster) < self.clusters[cluster_id]*0.67:
                 return self.clusterize_network(network)
 
             # check if there is someone alive in this cluster

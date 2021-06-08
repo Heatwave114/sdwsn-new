@@ -4,7 +4,7 @@
 
 # # colors = ['b', 'r', 'k', 'y', 'g', 'c', 'm']
 # # list_packet_losses = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]
-# list_packet_losses = [list(range(1, 4001)) for x in range(3)]
+list_packet_losses = [list(range(1, 4001)) for x in range(3)]
 # # for i, packetloss in enumerate(list_packet_losses):
 # #     tens_split = np.array_split(packetloss, math.ceil(len(packetloss)/10))
 # #     averages = np.mean(tens_split, axis=1)
@@ -92,25 +92,25 @@
 
 
 
-import matplotlib.pyplot as plt
-from matplotlib.dates import date2num
-import datetime
+# import matplotlib.pyplot as plt
+# from matplotlib.dates import date2num
+# import datetime
 
-x = [
-    datetime.datetime(2011, 1, 4, 0, 0),
-    datetime.datetime(2011, 1, 5, 0, 0),
-    datetime.datetime(2011, 1, 6, 0, 0)
-]
-x = date2num(x)
+# x = [
+#     datetime.datetime(2011, 1, 4, 0, 0),
+#     datetime.datetime(2011, 1, 5, 0, 0),
+#     datetime.datetime(2011, 1, 6, 0, 0)
+# ]
+# x = date2num(x)
 
-y = [4, 9, 2]
-z = [1, 2, 3]
-k = [11, 12, 13]
+# y = [4, 9, 2]
+# z = [1, 2, 3]
+# k = [11, 12, 13]
 
-ax = plt.subplot(111)
-ax.bar(x-0.2, y, width=0.2, color='b', align='center')
-ax.bar(x, z, width=0.2, color='g', align='center')
-ax.bar(x+0.2, k, width=0.2, color='r', align='center')
-ax.xaxis_date()
+# ax = plt.subplot(111)
+# ax.bar(x-0.2, y, width=0.2, color='b', align='center')
+# ax.bar(x, z, width=0.2, color='g', align='center')
+# ax.bar(x+0.2, k, width=0.2, color='r', align='center')
+# ax.xaxis_date()
 
-plt.show()
+# plt.show()
