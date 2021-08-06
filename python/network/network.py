@@ -60,6 +60,13 @@ class Network(list):
         self.scenario = []
         self.pack = 0
 
+        Network.round_energies_result_csv = {}
+        Network.round_energies_result_csv_writers = {}
+        x = [node for node in self if isinstance(node, Controller)== False]
+        x = [node for node in x if node.alive]
+        x = [node for node in x if node.id != cf.BSID]
+        Network.all_ordinary_nodes = [node for node in x if node.is_head() == False]
+
     def reset(self):
         """Set nodes to initial state so the same placement of nodes can be
         used by different techniques.
@@ -89,40 +96,49 @@ class Network(list):
 
 
     @classmethod
-    def make_round_energies_result_dir(cls):
+    def make_round_energies_result_dir(cls, scenario):
         """Mkdir results dir if it doesn't exist"""
-        Network.this_remaining_energies_result_dir = os.path.join(get_result_path(), 'remaining_energies')
+        Network.remaining_energies_path = os.path.join(get_result_path(), 'remaining_energies')
+        Network.this_remaining_energies_result_dir = os.path.join(Network.remaining_energies_path, scenario)
         dir_path = Network.this_remaining_energies_result_dir
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
         # return dir_path
 
     @classmethod
-    def open_round_energies_result_csv(cls, scenario):
+    def open_round_energies_result_csvs(cls, scenario, node_id):
         """Write only open the remaining_energies.csv"""
-        Network.this_remaining_energies_result_path = os.path.join(Network.this_remaining_energies_result_dir, f'{scenario}_' + datetime.today().strftime('%H-%M-%S') + '_remaining_energies.csv')
-        Network.round_energies_result_csv =  open(Network.this_remaining_energies_result_path, mode='w')
-        Network.round_energies_result_csv_writer = csv.writer(Network.round_energies_result_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        # Network.this_node_remaining_energies_result_path = os.path.join(Network.this_remaining_energies_result_dir, f'{scenario}_' + datetime.today().strftime('%H-%M-%S') + '_remaining_energies.csv')
+        Network.this_node_remaining_energies_result_path = os.path.join(Network.remaining_energies_path, scenario, 'node-' + f'{node_id}_' + 'remaining_energies.csv')
+        Network.round_energies_result_csv[node_id] =  open(Network.this_node_remaining_energies_result_path, mode='w')
+        Network.round_energies_result_csv_writers[node_id] = csv.writer(Network.round_energies_result_csv[node_id], delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     @classmethod
-    def close_round_energies_result_csv(cls):
+    def close_round_energies_result_csvs(cls):
         """close remaining_energies.csv"""
-        Network.round_energies_result_csv.close()
+        # Network.round_energies_result_csv.close()
+        for key in Network.round_energies_result_csv:
+            Network.round_energies_result_csv[key].close()
 
-
+    # def write_round_energies_header_csv(self, node_id):
     @classmethod
-    def write_round_energies_header_csv(cls):
+    def write_round_energies_header_csv(cls, node_id):
         """Writes the headings of the remaining_energies.csv"""
-        header = [f'node_{i}' for i in range(0, cf.MAX_ROUNDS)]
-        Network.round_energies_result_csv_writer.writerow(header)
+        # header = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [f'node_{i}' for i in range(0, cf.NB_NODES)]
+        # header = ['date'] + [f'node_{i}' for i in range(0, len(self.get_ordinary_nodes()))]
+        header = ['date', 'value']
+        Network.round_energies_result_csv_writers[node_id].writerow(header)
         # pass
 
     @classmethod
-    def write_round_energies_csv(cls, round_energies):
+    def write_round_energy_csv(cls, round_energy, node_id):
         """Append the round energies record(single line) to the csv"""
-        if not round_energies or not isinstance(round_energies, list) or not isinstance(round_energies[0], str):
-            raise Exception('round_energies is a list of strings (all node energies for that round)')
-        Network.round_energies_result_csv_writer.writerow(round_energies)
+        # if not round_energies or not isinstance(round_energies, list) or not isinstance(round_energies[0], str):
+        if not round_energy or not isinstance(round_energy, str):
+            # raise Exception('round_energies is a list of strings (all node energies for that round)')
+            raise Exception('round_energies is a string')
+        row = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [round_energy]
+        Network.round_energies_result_csv_writers[node_id].writerow(row)
 
 
     def simulate(self, scenario):
@@ -143,11 +159,13 @@ class Network(list):
 
         for round_nb in range(0, cf.MAX_ROUNDS):
             if round_nb == 0:
-                Network.make_round_energies_result_dir()
-                Network.open_round_energies_result_csv(scenario)
-                Network.write_round_energies_header_csv()
+                Network.make_round_energies_result_dir(scenario)
+                for node in Network.all_ordinary_nodes:
+                    Network.open_round_energies_result_csvs(scenario, node.id)
+                    Network.write_round_energies_header_csv(node.id)
+                # self.write_round_energies_header_csv()
             elif round_nb >= cf.MAX_ROUNDS:
-                Network.close_round_energies_result_csv()
+                Network.close_round_energies_result_csvs()
 
             if self.someone_alive():
                 self.round = round_nb
@@ -303,10 +321,13 @@ class Network(list):
 
         # if self.cnt == 0:
 
+            for node in Network.all_ordinary_nodes:
+                round_energy = str(node.energy_source.energy)
+                self.write_round_energy_csv(round_energy, node.id)
+                
 
         # write record (single line) into remaining_energies.csv
-        round_energies = [str(node.energy_source.energy) for node in self.get_ordinary_nodes()]
-        Network.write_round_energies_csv(round_energies)
+        # round_energies = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [str(node.energy_source.energy) for node in Network.all_ordinary_nodes]
 
         # try:
         #     with open('packetloss.txt', 'a') as f:
