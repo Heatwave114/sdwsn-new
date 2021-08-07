@@ -114,7 +114,8 @@ def make_prediction_results(this_mlc_path):
             result.future_forecast(save={'path': this_csv_png_result_path}, title=result.forecast_accuracy())
     
 
-make_prediction_results(r'results\2021-08-07\09-03\remaining_energies\MLC')
+# make_prediction_results(r'results\2021-08-07\09-03\remaining_energies\MLC')
+make_prediction_results(r'results\2021-08-07\20-49\remaining_energies\MLC')
 
 # result = ARIMA(r'C:\Users\sanis\Desktop\sdwsn-new\results\2021-08-07\02-33\remaining_energies\MLC\node-99_remaining_energies.csv')
 # result.future_forecast()
