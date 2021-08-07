@@ -126,19 +126,20 @@ class Network(list):
         """Writes the headings of the remaining_energies.csv"""
         # header = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [f'node_{i}' for i in range(0, cf.NB_NODES)]
         # header = ['date'] + [f'node_{i}' for i in range(0, len(self.get_ordinary_nodes()))]
-        header = ['date', 'value']
+        header = ['round', 'value']
         Network.round_energies_result_csv_writers[node_id].writerow(header)
         # pass
 
     @classmethod
-    def write_round_energy_csv(cls, round_energy, node_id):
+    def write_round_energy_csv(cls, node, round_nb):
         """Append the round energies record(single line) to the csv"""
         # if not round_energies or not isinstance(round_energies, list) or not isinstance(round_energies[0], str):
-        if not round_energy or not isinstance(round_energy, str):
-            # raise Exception('round_energies is a list of strings (all node energies for that round)')
-            raise Exception('round_energies is a string')
-        row = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [round_energy]
-        Network.round_energies_result_csv_writers[node_id].writerow(row)
+        # if not node.energy_source.energy or not isinstance(round_energy, str):
+        #     # raise Exception('round_energies is a list of strings (all node energies for that round)')
+        #     raise Exception('round_energies is a string')
+        # row = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [round_energy]
+        row = [round_nb] + [node.energy_source.energy]
+        Network.round_energies_result_csv_writers[node.id].writerow(row)
 
 
     def simulate(self, scenario):
@@ -323,7 +324,7 @@ class Network(list):
 
             for node in Network.all_ordinary_nodes:
                 round_energy = str(node.energy_source.energy)
-                self.write_round_energy_csv(round_energy, node.id)
+                self.write_round_energy_csv(node, round)
                 
 
         # write record (single line) into remaining_energies.csv
