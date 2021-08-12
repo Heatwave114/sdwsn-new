@@ -135,14 +135,14 @@ class Network(list):
         # pass
 
     @classmethod
-    def write_round_energy_csv(cls, node, round_nb):
+    def write_round_energy_csv(cls, node_id, round_energy, round_nb):
         """Append the round energies record(single line) to the csv"""
         # if not round_energies or not isinstance(round_energies, list) or not isinstance(round_energies[0], str):
         # if not node.energy_source.energy or not isinstance(round_energy, str):
         #     # raise Exception('round_energies is a list of strings (all node energies for that round)')
         #     raise Exception('round_energies is a string')
         # row = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [round_energy]
-        row = [round_nb] + [node.energy_source.energy]
+        row = [round_nb] + [round_energy]
         Network.round_energies_result_csv_writers[node.id].writerow(row)
 
 
@@ -362,9 +362,9 @@ class Network(list):
         # if self.cnt == 0:
 
             for node in Network.all_ordinary_nodes:
-                Network.rows[f'node_{node.id}'].append(node.energy_source.energy)
                 round_energy = str(node.energy_source.energy)
-                self.write_round_energy_csv(node, round)
+                Network.rows[f'node_{node.id}'].append(round_energy)
+                self.write_round_energy_csv(node.id, round_energy, round)
                 
 
         # write record (single line) into remaining_energies.csv
