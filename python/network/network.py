@@ -17,6 +17,8 @@ from python.utils.utils import calculate_distance, get_result_path
 from python.network.sleepscheduler import SleepScheduler
 from datetime import datetime
 
+import run_arima as arima
+
 class Network(list):
     """This class stores a list with all network nodes plus the base sta-
     tion. Its methods ensure the network behavior.
@@ -67,9 +69,11 @@ class Network(list):
         x = [node for node in x if node.id != cf.BSID]
         Network.all_ordinary_nodes = [node for node in x if node.is_head() == False]
         
-        Network.rows = {}
+        Network.actual_rows = {}
+        Network.predicted_rows = {}
         for node in Network.all_ordinary_nodes:
-            Network.rows[f'node_{node.id}'] = []
+            Network.actual_rows[f'node_{node.id}'] = []
+            Network.predicted_rows[f'node_{node.id}'] = []
 
     def reset(self):
         """Set nodes to initial state so the same placement of nodes can be
@@ -143,7 +147,7 @@ class Network(list):
         #     raise Exception('round_energies is a string')
         # row = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [round_energy]
         row = [round_nb] + [round_energy]
-        Network.round_energies_result_csv_writers[node.id].writerow(row)
+        Network.round_energies_result_csv_writers[node_id].writerow(row)
 
 
     def simulate(self, scenario):
@@ -169,9 +173,9 @@ class Network(list):
                     Network.open_round_energies_result_csvs(scenario, node.id)
                     Network.write_round_energies_header_csv(node.id)
                 # self.write_round_energies_header_csv()
-            elif round_nb >= cf.MAX_ROUNDS:
-                Network.close_round_energies_result_csvs()
-
+            # elif round_nb == cf.MAX_ROUNDS - 1:
+                
+                
             if self.someone_alive():
                 self.round = round_nb
                 print_args = (
@@ -249,27 +253,32 @@ class Network(list):
         Network.this_actual_remaining_energies_result_path = os.path.join(Network.arima_aggregate_path, 'actual_remaining_energies.csv')
         Network.this_predicted_remaining_energies_result_path = os.path.join(Network.arima_aggregate_path, 'predicted_remaining_energies.csv')
         Network.actual_energies_result_csv =  open(Network.this_actual_remaining_energies_result_path, mode='w')
-        Network.predicted_energies_result_csv =  open(Network.this_predicted_remaining_energies_result_path, mode='w')
+        # Network.predicted_energies_result_csv =  open(Network.this_predicted_remaining_energies_result_path, mode='w')
         
         # make the writers
         Network.actual_round_energies_result_csv_writer = csv.writer(Network.actual_energies_result_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        Network.predicted_round_energies_result_csv_writer = csv.writer(Network.predicted_energies_result_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        # Network.predicted_round_energies_result_csv_writer = csv.writer(Network.predicted_energies_result_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
         # write the headers
-        header =['node'] + [f'round_{round_nb}' for round_nb in range(0, cf.MAX_ROUNDS)]
+        header = ['node'] + [f'round_{round_nb}' for round_nb in range(0, cf.MAX_ROUNDS)]
         Network.actual_round_energies_result_csv_writer.writerow(header)
-        Network.predicted_round_energies_result_csv_writer.writerow(header)
+        # Network.predicted_round_energies_result_csv_writer.writerow(header)
 
+        node_ids = []
         for node in Network.all_ordinary_nodes:
             # write the actual_energies rows
-            Network.actual_round_energies_result_csv_writer.writerow([node.id] + Network.rows[f'node_{node.id}'])
-        
-            # write the predicted_energies rows
-            pass
+            Network.actual_round_energies_result_csv_writer.writerow([node.id] + Network.actual_rows[f'node_{node.id}'])
+            node_ids.append(str(node.id))
+    
+            
+            # pass
+            
+        Network.actual_energies_result_csv.close()
+        arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=10, node_ids=node_ids)
 
         # close the files
-        Network.actual_energies_result_csv.close()
-        Network.predicted_energies_result_csv.close()
+        Network.close_round_energies_result_csvs()
+        # Network.predicted_energies_result_csv.close()
 
 
         return tracer, timer_logs
@@ -361,10 +370,15 @@ class Network(list):
 
         # if self.cnt == 0:
 
+
+            # populate actual and predicted rows for use in csv files
             for node in Network.all_ordinary_nodes:
                 round_energy = str(node.energy_source.energy)
-                Network.rows[f'node_{node.id}'].append(round_energy)
+                Network.actual_rows[f'node_{node.id}'].append(round_energy)
+                # print(Network.predicted_rows[f'node_{node.id}'])
                 self.write_round_energy_csv(node.id, round_energy, round)
+
+
                 
 
         # write record (single line) into remaining_energies.csv
