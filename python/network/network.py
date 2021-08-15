@@ -62,6 +62,8 @@ class Network(list):
         self.scenario = []
         self.pack = 0
 
+        Network.remaining_energies_path = os.path.join(get_result_path(), 'remaining_energies')
+
         Network.round_energies_result_csv = {}
         Network.round_energies_result_csv_writers = {}
         x = [node for node in self if isinstance(node, Controller)== False]
@@ -146,8 +148,9 @@ class Network(list):
         #     # raise Exception('round_energies is a list of strings (all node energies for that round)')
         #     raise Exception('round_energies is a string')
         # row = [datetime.now().strftime(r"%Y:%m:%d::%H:%M:%S:%f")] + [round_energy]
-        row = [round_nb] + [round_energy]
-        Network.round_energies_result_csv_writers[node_id].writerow(row)
+
+        # row = [round_nb] + [round_energy]
+        # Network.round_energies_result_csv_writers[node_id].writerow(row)
 
 
     def simulate(self, scenario):
@@ -167,11 +170,11 @@ class Network(list):
         # write_energies_headings_csv()
 
         for round_nb in range(0, cf.MAX_ROUNDS):
-            if round_nb == 0:
-                Network.make_round_energies_result_dir(scenario)
-                for node in Network.all_ordinary_nodes:
-                    Network.open_round_energies_result_csvs(scenario, node.id)
-                    Network.write_round_energies_header_csv(node.id)
+            # if round_nb == 0:
+            #     Network.make_round_energies_result_dir(scenario)
+            #     for node in Network.all_ordinary_nodes:
+            #         Network.open_round_energies_result_csvs(scenario, node.id)
+            #         Network.write_round_energies_header_csv(node.id)
                 # self.write_round_energies_header_csv()
             # elif round_nb == cf.MAX_ROUNDS - 1:
                 
@@ -277,7 +280,7 @@ class Network(list):
         arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=10, node_ids=node_ids)
 
         # close the files
-        Network.close_round_energies_result_csvs()
+        # Network.close_round_energies_result_csvs()
         # Network.predicted_energies_result_csv.close()
 
 
