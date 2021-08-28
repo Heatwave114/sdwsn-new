@@ -125,9 +125,10 @@ def forecast_accuracy(forecast, actual):
     me = np.mean(forecast - actual)             # ME
     mae = np.mean(np.abs(forecast - actual))    # MAE
     mpe = np.mean((forecast - actual)/actual)   # MPE
+    mse = np.mean((forecast - actual)**2)       # MSE
     rmse = np.mean((forecast - actual)**2)**.5  # RMSE
     # return f'MAPE: {mape}\nME: {me}\nMAE: {mae}\nMPE: {mpe}\nRMSE: {rmse}' #\nCORR: {corr}\nMINMAX: {minmax}'
-    return {'mape': mape, 'me': me, 'mae': mae, 'mpe': mpe, 'rmse': rmse} #\nCORR: {corr}\nMINMAX: {minmax}'
+    return {'mape': mape, 'me': me, 'mae': mae, 'mpe': mpe,'mse': mse, 'rmse': rmse} #\nCORR: {corr}\nMINMAX: {minmax}'
 
 def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, step, node_ids):
     import copy
@@ -153,26 +154,29 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
 
     # Make segments divisions and add to segments OrderedDict
     for i in range(1, segments_length + 1):
-        if (len(battoir_df.columns) - (i-1) * step) >= step:
-            # segments[f'segment_{i}'] = battoir_df.iloc[:, (i-1) * step : i * step]
-            segments[i] = battoir_df.iloc[:, (i-1) * step : i * step]
-        elif (len(battoir_df.columns) - (i-1) * step) == 0:
-            break
-        else:
-            # segments[f'segment_{i}'] = battoir_df.iloc[:, (i-1) * step :]
-            segments[i] = battoir_df.iloc[:, (i-1) * step :]
+        segments[i] = battoir_df.iloc[:, (i-1) * step : i * step]
+
+        # if (len(battoir_df.columns) - (i-1) * step) >= step:
+        #     # segments[f'segment_{i}'] = battoir_df.iloc[:, (i-1) * step : i * step]
+        #     segments[i] = battoir_df.iloc[:, (i-1) * step : i * step]
+        # elif (len(battoir_df.columns) - (i-1) * step) == 0:
+        #     break
+        # else:
+        #     # segments[f'segment_{i}'] = battoir_df.iloc[:, (i-1) * step :]
+        #     segments[i] = battoir_df.iloc[:, (i-1) * step :]
     
     # Predicted CSV header with indexes
     iheader = []
     # Predicted CSV rows to write
     rows = OrderedDict()
     # Initialize all rows with an empty list
-    for i in range(1, len(df) + 1):
+    for i in range(0, len(df)):
         rows[f'row_{i}'] = []
 
     # Accuracy metrics
     average_forecast_accuracies = OrderedDict()
-    metrics = ['mape', 'me', 'mae', 'mpe', 'rmse']
+    # metrics = ['mape', 'me', 'mae', 'mpe', 'rmse']
+    metrics = ['mae', 'mse', 'rmse']
     # Initialize all metrics with an empty list
     for e in metrics:
         average_forecast_accuracies[e] = []
@@ -182,10 +186,10 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
         if k >= segments_length:
             break
         # Predict each row and add as (1/segments_length) to rows OrderedDict
-        i = 1
+        i = 0
         for _, crow in segments[k].iterrows():
-            fc, confint = stepwise_fit(crow).predict(n_periods = step, return_conf_int=True)
-            fc_acc = forecast_accuracy(fc, segments[k + 1].iloc[i-1, :])
+            fc, confint = stepwise_fit(crow.tolist()).predict(n_periods = step, return_conf_int=True)
+            fc_acc = forecast_accuracy(fc, segments[k + 1].iloc[i, :])
             # Append all the metrics to average_forecast_accuracies OrderedDict
             for e in metrics:
                 average_forecast_accuracies[e].append(fc_acc[e])
@@ -216,18 +220,18 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
     # Write the rows header for predictions
     this_arima_predict_csv_writer.writerow(header)
     # Write all the rows
-    i = 0 # node indes start
+    i = 0 # node index start
     for k, v in rows.items():
         this_arima_predict_csv_writer.writerow([node_ids[i]] + rows[k])
         i = i + 1
     
     # Write accuracy metrics header
-    this_arima_predict_csv_writer.writerow(['transition'] + metrics)
+    this_arima_predict_csv_writer.writerow(['stage'] + metrics)
     # Prepare all metrics rows
     transposed_avg_fc_acc = []
     int_transposed_avg_fc_acc = []
     # Transpose operation on average_forecast_accuracies OrderedDict
-    for i in range(0, segments_length):
+    for i in range(0, segments_length - 1):
         row = []
         for k, v in average_forecast_accuracies.items():
             row.append(average_forecast_accuracies[k][i])
@@ -252,6 +256,8 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
 
     # Close the predicted csv file
     this_arima_predict_csv.close()
+
+    print(average_forecast_accuracies)
     
 
 # def make_prediction_results(this_mlc_path):
