@@ -277,7 +277,7 @@ class Network(list):
             # pass
             
         Network.actual_energies_result_csv.close()
-        arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=10, node_ids=node_ids)
+        arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=5, node_ids=node_ids)
 
         # close the files
         # Network.close_round_energies_result_csvs()
