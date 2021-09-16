@@ -162,6 +162,10 @@ MAX_TX_PER_ROUND = 1
 
 NOTIFY_POSITION = 1
 
+# ARIMA_NB_ENTROPY = 50
+ARIMA_ENTROPY_THRESHOLD = 0.04
+ARIMA_FORECAST_LENGTH = 10
+
 # time step for checking a node's stage in s
 TIME_STEP = 1.5e-9
 

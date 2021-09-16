@@ -5,8 +5,10 @@ import re
 import os
 import csv
 
+import config as cf
+
 def stepwise_fit(train_data):
-     # CHECK BEST ARIMA MODEL
+     # CHECK Bentropy MODEL
     from pmdarima import auto_arima
     import warnings
     warnings.filterwarnings("ignore") # Ignore harmless warnings
@@ -162,3 +164,37 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
 
     # Close the predicted csv file
     this_arima_predict_csv.close()
+
+def forced_deviation(row, mean):
+    forced_deviation = 0
+    for energy in row:
+        forced_deviation = forced_deviation + (energy - mean)**2
+    standard_forced_deviation = (forced_deviation / len(row))**0.5
+    return standard_forced_deviation
+
+def generate_entropy_distance(this_actual_csv_path, this_entropy_csv_path, node_ids, nodes):
+    import csv
+    import antropy as ant
+
+    df = pd.read_csv(this_actual_csv_path, index_col='node')
+
+    # Open CSV and make writer
+    this_entropy_predict_csv = open(this_entropy_csv_path, mode = 'w')
+    this_entropy_predict_csv_writer = csv.writer(this_entropy_predict_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+    # Write the header
+    this_entropy_predict_csv_writer.writerow(['node', 'distance', 'deviation', 'entropy', 'Target'])
+
+    i = 0
+    for index, row in df.iterrows():
+        distance = nodes[i].distance_to_endpoint
+        deviation_from_initial_energy = cf.INITIAL_ENERGY - forced_deviation(row.tolist(), cf.INITIAL_ENERGY) # the higher the more diseased
+        entropy = ant.sample_entropy(row.tolist())
+        health_status = 'diseased'
+        if entropy < cf.ARIMA_ENTROPY_THRESHOLD and deviation_from_initial_energy > 0.6 * cf.INITIAL_ENERGY:
+            health_status = 'healthy'
+        this_entropy_predict_csv_writer.writerow([node_ids[i]] + [str(distance)]  + [str(deviation_from_initial_energy)] + [str(entropy)] + [health_status])
+        i = i + 1
+    del i
+    
+    this_entropy_predict_csv.close()
