@@ -22,16 +22,18 @@ def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
 
     # Load data from the file
     errors_file = open(errors_file_path, 'r')
-    old_data = OrderedDict(json.load(errors_file))
+    this_data = OrderedDict(json.load(errors_file))
     errors_file.close()
 
     # Orchestrate
-    new_errors_dict = OrderedDict()
-    new_errors_dict[this_errors_space] = OrderedDict({category: this_errors_dict})
-
-    # Update the old data
-    new_data = old_data.update(new_errors_dict)
+    if this_errors_space not in this_data: # Add new space
+        new_space_dict = OrderedDict()
+        new_space_dict[this_errors_space] = OrderedDict({category: this_errors_dict})
+        this_data.update(new_space_dict)
+    else: # Update the space
+        new_errors_dict = OrderedDict()
+        this_data[this_errors_space].update(OrderedDict({category: this_errors_dict}))
 
     # Dump new data to the file
     with open(errors_file_path, 'w') as errors_file:
-        json.dump(new_data, errors_file)
+        json.dump(this_data, errors_file)
