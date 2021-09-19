@@ -15,8 +15,18 @@ Using 10 records from history to make 5 consecutive future forecasts. The mechan
 squared error and mean absolute error = (0.32, 0.047) respectively.
 '''
 def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
-    if category not in ['arima', 'markov']:
-        raise Exception('Category must be one of (arima | markov)')
+    if not (isinstance(predicator_length, int) and isinstance(forecast_length, int)):
+        raise Exception('predicator_length and forecast_length are integers')
+    elif category not in ['arima', 'markov']:
+        raise Exception('category must be one of (arima | markov)')
+    elif not (isinstance(errors_dict, OrderedDict) or isinstance(errors_dict, dict)):
+        raise Exception('errors_dict must be a dictionary or ordered dictionary')
+    elif len(errors_dict) == 0:
+        raise Exception('errors_dict cannot be empty')
+    elif not len(errors_dict) <= 2:
+        raise Exception('only 2 errors allowed')
+    elif not set(errors_dict).issubset({'mae', 'mse'}):
+        raise Exception('errors must be one or both of (mae | mse)')
 
     this_errors_category = category
     this_errors_space = f'{predicator_length}p{forecast_length}'
