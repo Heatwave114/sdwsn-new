@@ -35,8 +35,8 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
     import copy
     import math
     from collections import OrderedDict
-    import numpy as np
     import re
+    import json
 
     df = pd.read_csv(this_actual_csv_path, index_col='node')
     battoir_df = copy.deepcopy(df)
@@ -117,7 +117,7 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
     # Accuracy metrics
     average_forecast_accuracies = OrderedDict()
     # metrics = ['mape', 'me', 'mae', 'mpe', 'rmse']
-    metrics = ['mae', 'mse', 'rmse']
+    metrics = ['mae', 'mse']
     # Initialize all metrics with an empty list
     for i in range(1, n_stages + 1):
         average_forecast_accuracies[i] = [[] for i in metrics]
@@ -158,12 +158,14 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
     # Write final average of accuracy metrics header
     this_arima_predict_csv_writer.writerow(list(map(lambda x: 'avg_' + x, metrics)))
     # Write final average of accuracy metrics
-    this_arima_predict_csv_writer.writerow(final_avg.tolist())    
+    this_arima_predict_csv_writer.writerow(final_avg.tolist())
 
 
 
     # Close the predicted csv file
     this_arima_predict_csv.close()
+
+    return final_avg.tolist()
 
 def forced_deviation(row, mean):
     forced_deviation = 0

@@ -287,7 +287,7 @@ class Network(list):
             # pass
             
         Network.actual_energies_result_csv.close()
-        # arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=cf.ARIMA_FORECAST_LENGTH, node_ids=node_ids)
+        arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=cf.ARIMA_FORECAST_LENGTH, node_ids=node_ids)
 
         Network.this_entropy_csv_path = os.path.join(Network.arima_aggregate_path, f'entropy-{cf.MAX_ROUNDS}.csv')
         arima.generate_entropy_distance(Network.this_actual_remaining_energies_result_path, Network.this_entropy_csv_path, node_ids=node_ids, nodes=nodes)

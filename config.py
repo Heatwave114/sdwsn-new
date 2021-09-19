@@ -173,7 +173,7 @@ TIME_STEP = 1.5e-9
 DISTANCE_THRESH = 10
 # Network configurations:
 # number of nodes
-NB_NODES = 100
+NB_NODES = 20
 SUBCONT0 = -3
 SUBCONT1 = -4
 # Set to True if number of clusters should be the same as number of
