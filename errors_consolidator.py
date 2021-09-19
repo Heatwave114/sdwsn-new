@@ -12,9 +12,9 @@ In the above call, json_orchestrator will add an entry or make updates to an exi
 
 Arguments Elaboration:
 Using 10 records from history to make 5 consecutive future forecasts. The mechanism used for forecasting is 'arima' with  mean 
-squared error and mean absolute error = (0.32, 0.047) respectively.
+absolute error and mean squared error = (0.32, 0.047) respectively.
 '''
-def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
+def json_orchestrate(predicator_length, forecast_length, category, errors_dict, svm_verdict):
     if not (isinstance(predicator_length, int) and isinstance(forecast_length, int)):
         raise Exception('predicator_length and forecast_length are integers')
     elif category not in ['arima', 'markov']:
@@ -27,7 +27,9 @@ def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
         raise Exception('only 2 errors allowed')
     elif not set(errors_dict).issubset({'mae', 'mse'}):
         raise Exception('errors must be one or both of (mae | mse)')
-
+    elif svm_verdict not in ['healthy', 'diseased']:
+        raise Exception('svm_verdict must be one of (healthy | diseased)')
+        
     this_errors_category = category
     this_errors_space = f'{predicator_length}p{forecast_length}'
     this_errors_dict = OrderedDict(errors_dict)
@@ -45,16 +47,20 @@ def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
     this_data = OrderedDict(json.load(errors_file))
     errors_file.close()
 
-    # Orchestrate
-    if this_errors_space not in this_data:  # Add new space
+    '''
+    Orchestrate
+    '''
+    if this_errors_space not in this_data: # Add new space
         new_space_dict = OrderedDict()
-        new_space_dict[this_errors_space] = OrderedDict(
-            {category: this_errors_dict})
+        new_space_dict[this_errors_space] = OrderedDict({category: this_errors_dict})
         this_data.update(new_space_dict)
-    else:  # Update the space
+    else: # Update the space
         new_errors_dict = OrderedDict()
-        this_data[this_errors_space].update(
-            OrderedDict({category: this_errors_dict}))
+        this_data[this_errors_space].update(OrderedDict({category: this_errors_dict}))
+
+    # Update svm verdict (healthy | diseased)
+    svm_verdict_dict = OrderedDict({'svm_verdict': svm_verdict})
+    this_data[this_errors_space].update(svm_verdict_dict)
 
     # Dump new data to the file
     with open(errors_file_path, 'w') as errors_file:
