@@ -4,6 +4,16 @@ import os
 from collections import OrderedDict
 
 
+'''
+For example:
+json_orchestrate(10, 5, 'arima', {'mae': 0.32, 'mse': 0.047}) ;
+
+In the above call, json_orchestrator will add an entry or make updates to an existing entry in the errors_parallel.json file.
+
+Arguments Elaboration:
+Using 10 records from history to make 5 consecutive future forecasts. The mechanism used for forecasting is 'arima' with  mean 
+squared error and mean absolute error = (0.32, 0.047) respectively.
+'''
 def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
     if category not in ['arima', 'markov']:
         raise Exception('Category must be one of (arima | markov)')
@@ -26,13 +36,15 @@ def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
     errors_file.close()
 
     # Orchestrate
-    if this_errors_space not in this_data: # Add new space
+    if this_errors_space not in this_data:  # Add new space
         new_space_dict = OrderedDict()
-        new_space_dict[this_errors_space] = OrderedDict({category: this_errors_dict})
+        new_space_dict[this_errors_space] = OrderedDict(
+            {category: this_errors_dict})
         this_data.update(new_space_dict)
-    else: # Update the space
+    else:  # Update the space
         new_errors_dict = OrderedDict()
-        this_data[this_errors_space].update(OrderedDict({category: this_errors_dict}))
+        this_data[this_errors_space].update(
+            OrderedDict({category: this_errors_dict}))
 
     # Dump new data to the file
     with open(errors_file_path, 'w') as errors_file:
