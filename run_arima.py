@@ -5,7 +5,12 @@ import re
 import os
 import csv
 
+from collections import OrderedDict
+
 import config as cf
+import errors_consolidate.errors_consolidator as ec
+
+
 
 def stepwise_fit(train_data):
      # CHECK Bentropy MODEL
@@ -31,12 +36,10 @@ def forecast_accuracy(forecast, actual):
     # return f'MAPE: {mape}\nME: {me}\nMAE: {mae}\nMPE: {mpe}\nRMSE: {rmse}' #\nCORR: {corr}\nMINMAX: {minmax}'
     return {'mape': mape, 'me': me, 'mae': mae, 'mpe': mpe,'mse': mse, 'rmse': rmse} #\nCORR: {corr}\nMINMAX: {minmax}'
 
-def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, step, node_ids):
+def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, step, consolidating_errors=False):
     import copy
     import math
-    from collections import OrderedDict
     import re
-    import json
 
     df = pd.read_csv(this_actual_csv_path, index_col='node')
     battoir_df = copy.deepcopy(df)
@@ -44,14 +47,21 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
         raise Exception('columns(rounds) length must be at least twice the step')
     if len(df.columns) % step != 0:
         raise Exception('columns(rounds) length must be a multiple of step')
+    
+    # Node ids
+    node_ids = battoir_df.index.tolist()
 
     # How many divisions along columns (segments) in this table
     segments_length = math.ceil(len(battoir_df.columns)/step)
     segments = OrderedDict()
 
     # Open CSV and make writer
-    this_arima_predict_csv = open(this_prediction_csv_path.replace('.csv', f'_step-{step}.csv'), mode = 'w')
-    this_arima_predict_csv_writer = csv.writer(this_arima_predict_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    if not consolidating_errors:
+        this_arima_predict_csv = open(this_prediction_csv_path.replace('.csv', f'_step-{step}.csv'), mode = 'w')
+        this_arima_predict_csv_writer = csv.writer(this_arima_predict_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    else:
+        this_arima_predict_csv = open(this_prediction_csv_path, mode='w')
+        this_arima_predict_csv_writer = csv.writer(this_arima_predict_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     # Make segments divisions and add to segments OrderedDict
     for i in range(1, segments_length + 1):
@@ -200,3 +210,12 @@ def generate_entropy_distance(this_actual_csv_path, this_entropy_csv_path, node_
     del i
     
     this_entropy_predict_csv.close()
+
+
+def consolidate_errors():
+    from datetime import datetime
+    errors = make_segmented_predictions('C:/Users/sanis/Desktop/sdwsn-new/results/2021-09-18/12-35/remaining_energies/MLC/arima/aggregate/actual_remaining_energies.csv', f'C:/Users/sanis/Desktop/sdwsn-new/errors_consolidate/arima_forecasts/{cf.ARIMA_FORECAST_LENGTH}p{cf.ARIMA_FORECAST_LENGTH}-{datetime.now().strftime(r"%Y-%m-%d--%H-%M-%S")}.csv', cf.ARIMA_FORECAST_LENGTH, consolidating_errors=True)
+    errors_dict = OrderedDict({"mae": errors[0], "mse": errors[1]})
+    ec.json_orchestrate(cf.ARIMA_FORECAST_LENGTH, cf.ARIMA_FORECAST_LENGTH, 'arima', errors_dict)
+
+consolidate_errors()
