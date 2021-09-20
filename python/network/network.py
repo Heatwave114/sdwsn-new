@@ -270,27 +270,27 @@ class Network(list):
 
 
         nodes = OrderedDict()
-        # Initialize all rows with an empty list
+        # Initialize all nodes with an empty list
         for i in range(0, len(Network.all_ordinary_nodes)):
             nodes[i] = None
 
-        node_ids = []
+        # node_ids = []
         i = 0
         for node in Network.all_ordinary_nodes:
             # write the actual_energies rows
             Network.actual_round_energies_result_csv_writer.writerow([node.id] + Network.actual_rows[f'node_{node.id}'])
-            node_ids.append(str(node.id))
+            # node_ids.append(str(node.id))
             nodes[i] = node
             i = i + 1
     
             
             # pass
             
-        # Network.actual_energies_result_csv.close()
-        # arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=cf.ARIMA_FORECAST_LENGTH, node_ids=node_ids)
+        Network.actual_energies_result_csv.close()
+        arima.make_segmented_predictions(Network.this_actual_remaining_energies_result_path, Network.this_predicted_remaining_energies_result_path, step=cf.ARIMA_FORECAST_LENGTH)
 
         # Network.this_entropy_csv_path = os.path.join(Network.arima_aggregate_path, f'entropy-{cf.MAX_ROUNDS}.csv')
-        # arima.generate_entropy_distance(Network.this_actual_remaining_energies_result_path, Network.this_entropy_csv_path, node_ids=node_ids, nodes=nodes)
+        # arima.generate_entropy_distance(Network.this_actual_remaining_energies_result_path, Network.this_entropy_csv_path, nodes=nodes)
 
         # close the files
         # Network.close_round_energies_result_csvs()

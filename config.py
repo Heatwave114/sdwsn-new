@@ -155,7 +155,7 @@ TRACE_COVERAGE = 1
 TRACE_LEARNING_CURVE = 1
 TRANS_RATE = 4150       # IN bps
 # Runtime configuration
-MAX_ROUNDS = 50
+MAX_ROUNDS = 40
 # number of transmissions of sensed information to cluster heads or to
 # base station (per round)
 MAX_TX_PER_ROUND = 1
@@ -164,7 +164,7 @@ NOTIFY_POSITION = 1
 
 # ARIMA_NB_ENTROPY = 50
 ARIMA_ENTROPY_THRESHOLD = 0.04
-ARIMA_FORECAST_LENGTH = 20
+ARIMA_FORECAST_LENGTH = 10
 
 # time step for checking a node's stage in s
 TIME_STEP = 1.5e-9

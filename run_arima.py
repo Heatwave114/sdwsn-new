@@ -75,7 +75,34 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
     for i in range(0, len(df)):
         rows[f'row_{i}'] = []
 
+    '''
+    Accuracy Metrics
+    '''
+
+
+    # How many predictions are possible
+    n_stages = segments_length - 1
     
+    # Accuracy metrics
+    average_forecast_accuracies = OrderedDict()
+    # metrics = ['mape', 'me', 'mae', 'mpe', 'rmse']
+    metrics = ['mae', 'mse']
+    # Initialize all metrics with an empty list
+    for i in range(1, n_stages + 1):
+        average_forecast_accuracies[i] = [[] for i in metrics]
+
+    # Accuracy metrics
+    average_forecast_accuracies = OrderedDict()
+    # metrics = ['mape', 'me', 'mae', 'mpe', 'rmse']
+    metrics = ['mae', 'mse']
+    # Initialize all metrics with an empty list
+    for i in range(1, n_stages + 1):
+        average_forecast_accuracies[i] = [[] for i in metrics]
+
+
+    '''
+    Accuracy Metrics
+    '''
 
     # For each segment, 
     for k, v in segments.items():
@@ -84,10 +111,19 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
         # Predict each row and add as (1/segments_length) to rows OrderedDict
         i = 0
         for _, crow in segments[k].iterrows():
-            fc, confint = stepwise_fit(crow.tolist()).predict(n_periods = step, return_conf_int=True)
+            fc, confint = stepwise_fit(crow.tolist()).predict(n_periods = step, return_conf_int=True, verbose=False)
             fc_acc = forecast_accuracy(fc, segments[k + 1].iloc[i, :])
+
+            ###### Accuracy Metrics ##########
+            # Append all the metrics to average_forecast_accuracies OrderedDict
+            for j, e in tuple(zip(range(0, len(metrics)), metrics)):
+                average_forecast_accuracies[k][j].append(fc_acc[e])
+            ###### Accuracy Metrics ##########
+            
             rows[f'row_{i}'].extend(fc.tolist())
             i = i + 1
+
+
 
         # Find (1/segments_length) iheader
         cheader = []
@@ -118,29 +154,19 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
     Accuracy Metrics
     """
 
-    # How many predictions are possible
-    n_stages = segments_length - 1
-
     # Write number of stages
     this_arima_predict_csv_writer.writerow(['no_of_stages', str(n_stages)])
 
-    # Accuracy metrics
-    average_forecast_accuracies = OrderedDict()
-    # metrics = ['mape', 'me', 'mae', 'mpe', 'rmse']
-    metrics = ['mae', 'mse']
-    # Initialize all metrics with an empty list
-    for i in range(1, n_stages + 1):
-        average_forecast_accuracies[i] = [[] for i in metrics]
 
-    # For each segment, 
-    for k, v in segments.items():
-        if k >= segments_length:
-            break
-        # Add all metrics to their queue in every stage
-        for _, crow in segments[k].iterrows():
-            # Append all the metrics to average_forecast_accuracies OrderedDict
-            for i, e in tuple(zip(range(0, len(metrics)), metrics)):
-                average_forecast_accuracies[k][i].append(fc_acc[e])
+    # # For each segment, 
+    # for k, v in segments.items():
+    #     if k >= segments_length:
+    #         break
+    #     # Add all metrics to their queue in every stage
+    #     for _, crow in segments[k].iterrows():
+    #         # Append all the metrics to average_forecast_accuracies OrderedDict
+    #         for i, e in tuple(zip(range(0, len(metrics)), metrics)):
+    #             average_forecast_accuracies[k][i].append(fc_acc[e])
 
     np_average_forecast_accuracies = OrderedDict()
     for k, v in average_forecast_accuracies.items():
@@ -184,11 +210,14 @@ def forced_deviation(row, mean):
     standard_forced_deviation = (forced_deviation / len(row))**0.5
     return standard_forced_deviation
 
-def generate_entropy_distance(this_actual_csv_path, this_entropy_csv_path, node_ids, nodes):
+def generate_entropy_distance(this_actual_csv_path, this_entropy_csv_path, nodes):
     import csv
     import antropy as ant
 
     df = pd.read_csv(this_actual_csv_path, index_col='node')
+
+    # Node ids
+    node_ids = df.index.tolist()
 
     # Open CSV and make writer
     this_entropy_predict_csv = open(this_entropy_csv_path, mode = 'w')
@@ -218,4 +247,4 @@ def consolidate_errors():
     errors_dict = OrderedDict({"mae": errors[0], "mse": errors[1]})
     ec.json_orchestrate(cf.ARIMA_FORECAST_LENGTH, cf.ARIMA_FORECAST_LENGTH, 'arima', errors_dict)
 
-consolidate_errors()
+# consolidate_errors()
