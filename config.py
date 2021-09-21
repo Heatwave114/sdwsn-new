@@ -155,7 +155,7 @@ TRACE_COVERAGE = 1
 TRACE_LEARNING_CURVE = 1
 TRANS_RATE = 4150       # IN bps
 # Runtime configuration
-MAX_ROUNDS = 40
+MAX_ROUNDS = 4000
 # number of transmissions of sensed information to cluster heads or to
 # base station (per round)
 MAX_TX_PER_ROUND = 1
@@ -173,7 +173,7 @@ TIME_STEP = 1.5e-9
 DISTANCE_THRESH = 10
 # Network configurations:
 # number of nodes
-NB_NODES = 20
+NB_NODES = 100
 SUBCONT0 = -3
 SUBCONT1 = -4
 # Set to True if number of clusters should be the same as number of
