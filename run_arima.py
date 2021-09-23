@@ -45,14 +45,14 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
     battoir_df = copy.deepcopy(df)
     if len(df.columns) < 2 * step:
         raise Exception('columns(rounds) length must be at least twice the step')
-    if len(df.columns) % step != 0:
-        raise Exception('columns(rounds) length must be a multiple of step')
+    # if len(df.columns) % step != 0:
+    #     raise Exception('columns(rounds) length must be a multiple of step')
     
     # Node ids
     node_ids = battoir_df.index.tolist()
 
     # How many divisions along columns (segments) in this table
-    segments_length = math.ceil(len(battoir_df.columns)/step)
+    segments_length = int(len(battoir_df.columns)/step)
     segments = OrderedDict()
 
     # Open CSV and make writer
@@ -64,8 +64,16 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
         this_arima_predict_csv_writer = csv.writer(this_arima_predict_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     # Make segments divisions and add to segments OrderedDict
+    segments_overflow_length = 0
     for i in range(1, segments_length + 1):
-        segments[i] = battoir_df.iloc[:, (i-1) * step : i * step]
+        if not (i == segments_length):
+            segments[i] = battoir_df.iloc[:, (i-1) * step : i * step]
+        else:
+            segments[i] = battoir_df.iloc[:, (i-1) * step : ]
+            this_segment_length = len(segments[i].columns)
+            if this_segment_length > step:
+                segments_overflow_length = this_segment_length
+
 
     # Predicted CSV header with indexes
     iheader = []
@@ -111,8 +119,26 @@ def make_segmented_predictions(this_actual_csv_path, this_prediction_csv_path, s
         # Predict each row and add as (1/segments_length) to rows OrderedDict
         i = 0
         for _, crow in segments[k].iterrows():
-            fc, confint = stepwise_fit(crow.tolist()).predict(n_periods = step, return_conf_int=True, verbose=False)
-            fc_acc = forecast_accuracy(fc, segments[k + 1].iloc[i, :])
+            if not k == (segments_length - 1):
+                # print('ttttttttttttttttttttt')
+                # print(segments_overflow_length)
+                fc, confint = stepwise_fit(crow.tolist()).predict(n_periods = step, return_conf_int=True, verbose=False)
+                fc_acc = forecast_accuracy(fc, segments[k + 1].iloc[i, :])
+            elif not segments_overflow_length:
+                # print('aaaaaaaaaaaaaaaaa')
+                # print(segments_overflow_length)
+                # print()
+                fc, confint = stepwise_fit(crow.tolist()).predict(n_periods = step, return_conf_int=True, verbose=False)
+                # print(len(fc))
+                # print(segments)
+                # print(segments[k + 1])
+                # print(len(segments[k + 1].iloc[i, :]))
+                fc_acc = forecast_accuracy(fc, segments[k + 1].iloc[i, :])
+            else:
+                fc, confint = stepwise_fit(crow.tolist()).predict(n_periods = segments_overflow_length, return_conf_int=True, verbose=False)
+                fc_acc = forecast_accuracy(fc, segments[k + 1].iloc[i, :])
+                
+
 
             ###### Accuracy Metrics ##########
             # Append all the metrics to average_forecast_accuracies OrderedDict
@@ -243,6 +269,7 @@ def generate_entropy_distance(this_actual_csv_path, this_entropy_csv_path, nodes
 
 def consolidate_errors():
     from datetime import datetime
+    # tens = list(range(10, 1001, 10))
     tens = list(range(10, 1001, 10))
 
     for ten in tens:
