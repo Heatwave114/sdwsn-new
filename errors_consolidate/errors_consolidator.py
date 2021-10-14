@@ -35,7 +35,7 @@ def json_orchestrate(predicator_length, forecast_length, category, errors_dict):
     this_errors_dict = OrderedDict(errors_dict)
 
     # The json file path
-    errors_file_path = 'C:/Users/sanis/Desktop/sdwsn-new/errors_consolidate/errors_parallel.json'
+    errors_file_path = 'errors_consolidate\errors_parallel.json'
 
     # Create the file if it doesn't exist
     if not os.path.exists(errors_file_path):

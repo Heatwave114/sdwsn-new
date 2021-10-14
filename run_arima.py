@@ -270,15 +270,22 @@ def generate_entropy_distance(this_actual_csv_path, this_entropy_csv_path, nodes
 def consolidate_errors():
     from datetime import datetime
     # tens = list(range(10, 1001, 10))
-    tens = list(range(10, 1001, 10))
 
-    for ten in tens:
-        # errors = make_segmented_predictions('C:/Users/sanis/Desktop/sdwsn-new/results/2021-09-18/12-35/remaining_energies/MLC/arima/aggregate/actual_remaining_energies.csv', f'C:/Users/sanis/Desktop/sdwsn-new/errors_consolidate/arima_forecasts/{cf.ARIMA_FORECAST_LENGTH}p{cf.ARIMA_FORECAST_LENGTH}-{datetime.now().strftime(r"%Y-%m-%d--%H-%M-%S")}.csv', cf.ARIMA_FORECAST_LENGTH, consolidating_errors=True)
-        errors = make_segmented_predictions('errors_consolidate/datasets/actual_remaining_energies-2000-21-09-2021.csv', f'errors_consolidate/arima_forecasts/{ten}p{ten}-{datetime.now().strftime(r"%Y-%m-%d--%H-%M-%S")}.csv', ten, consolidating_errors=True)
-        errors_dict = OrderedDict({"mae": errors[0], "mse": errors[1]})
-        # ec.json_orchestrate(cf.ARIMA_FORECAST_LENGTH, cf.ARIMA_FORECAST_LENGTH, 'arima', errors_dict)
-        ec.json_orchestrate(ten, ten, 'arima', errors_dict)
+    # for ten in tens:
+    #     # errors = make_segmented_predictions('C:/Users/sanis/Desktop/sdwsn-new/results/2021-09-18/12-35/remaining_energies/MLC/arima/aggregate/actual_remaining_energies.csv', f'C:/Users/sanis/Desktop/sdwsn-new/errors_consolidate/arima_forecasts/{cf.ARIMA_FORECAST_LENGTH}p{cf.ARIMA_FORECAST_LENGTH}-{datetime.now().strftime(r"%Y-%m-%d--%H-%M-%S")}.csv', cf.ARIMA_FORECAST_LENGTH, consolidating_errors=True)
+    #     errors = make_segmented_predictions('errors_consolidate/datasets/actual_remaining_energies-2000-21-09-2021.csv', f'errors_consolidate/arima_forecasts/{ten}p{ten}-{datetime.now().strftime(r"%Y-%m-%d--%H-%M-%S")}.csv', ten, consolidating_errors=True)
+    #     errors_dict = OrderedDict({"mae": errors[0], "mse": errors[1]})
+    #     # ec.json_orchestrate(cf.ARIMA_FORECAST_LENGTH, cf.ARIMA_FORECAST_LENGTH, 'arima', errors_dict)
+    #     ec.json_orchestrate(ten, ten, 'arima', errors_dict)
+
+    ten = 990
+    errors = make_segmented_predictions('errors_consolidate/datasets/actual_remaining_energies-2000-21-09-2021.csv', f'errors_consolidate/arima_forecasts/{ten}p{ten}-{datetime.now().strftime(r"%Y-%m-%d--%H-%M-%S")}.csv', ten, consolidating_errors=True)
+    errors_dict = OrderedDict({"mae": errors[0], "mse": errors[1]})
+    # ec.json_orchestrate(cf.ARIMA_FORECAST_LENGTH, cf.ARIMA_FORECAST_LENGTH, 'arima', errors_dict)
+    ec.json_orchestrate(ten, ten, 'arima', errors_dict)
+
+    
 
 
-if __name__=="__main__":
+if __name__== "__main__":
     consolidate_errors()
